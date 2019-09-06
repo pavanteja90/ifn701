@@ -1,1 +1,67 @@
-<p>transport-map works!</p>
+<div class="container taxi-page">
+    <div id="__content__">
+        <!-- <br>
+        <h3>Filters</h3>
+        <br>
+        <div class="row">
+            <div class="col-md-3">
+                <mat-form-field color="primary">
+                    <mat-label>Choose Date</mat-label>
+                    <input matInput (dateChange)="dateChanged($event.value)" [min]="__minDate" [max]="__maxDate"
+                        [value]="__selectedDate" [matDatepicker]="datepicker">
+                    <mat-datepicker-toggle matSuffix [for]="datepicker"></mat-datepicker-toggle>
+                    <mat-datepicker color="primary" #datepicker></mat-datepicker>
+                </mat-form-field>
+            </div>
+            <div class="col-md-3">
+                <mat-form-field color="primary">
+                    <mat-label>Start Time</mat-label>
+                    <input matInput name="starttimepicker" [ngxTimepicker]="starttimepicker" [format]="24"
+                        [(ngModel)]="__startTime">
+                    <ngx-material-timepicker #starttimepicker></ngx-material-timepicker>
+                </mat-form-field>
+            </div>
+            <div class="col-md-3">
+                <mat-form-field color="primary">
+                    <mat-label>End Time</mat-label>
+                    <input matInput name="endtimepicker" [ngxTimepicker]="endtimepicker" [format]="24"
+                        [min]="__startTime" [(ngModel)]="__endTime">
+                    <ngx-material-timepicker #endtimepicker></ngx-material-timepicker>
+                </mat-form-field>
+            </div>
+            <div class="col-md-3">
+                <mat-form-field>
+                    <mat-label>Select a Taxi</mat-label>
+                    <mat-select [(value)]="__selectedTaxi">
+                        <mat-option value="fhv">FHV</mat-option>
+                        <mat-option value="green">Green</mat-option>
+                        <mat-option value="yellow">Yellow</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <button mat-raised-button color="primary" (click)="submitForm()">Submit</button>
+            </div>
+            <div class="col-md-3">
+
+            </div>
+            <div class="col-md-3">
+
+            </div>
+            <div class="col-md-3">
+
+            </div>
+        </div>
+        <br> -->
+        <br>
+        <div class="row">
+            <div id='map'></div>
+        </div>
+    </div>
+</div>
+
+<!-- <div class="loading-page">
+    <app-loading></app-loading>
+</div> -->
