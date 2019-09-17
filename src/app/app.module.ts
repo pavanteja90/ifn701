@@ -20,6 +20,8 @@ import { ReqMatModule } from "./app.material.module";
 import { TransportMapComponent } from './transport-map/transport-map.component';
 import { LoadingComponent } from './loading/loading.component';
 
+//Services
+import { ReadCSVService } from './services/read-csv.service';
 
 @NgModule({
   declarations: [
@@ -37,7 +39,7 @@ import { LoadingComponent } from './loading/loading.component';
     ReqMatModule,
     NgxMaterialTimepickerModule
   ],
-  providers: [],
+  providers: [ReadCSVService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
