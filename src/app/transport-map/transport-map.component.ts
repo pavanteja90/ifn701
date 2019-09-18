@@ -11,6 +11,7 @@ export class TransportMapComponent implements OnInit {
 
   public map: any;
   public CSV_TARGET_FILE: string = '../../assets/BCC_sensors.csv';
+  public ID_List: Array<any> = [];
 
   constructor(public _readCSVService: ReadCSVService) { }
 
@@ -103,6 +104,7 @@ export class TransportMapComponent implements OnInit {
       for (var j = 0; j < headers.length; j++) {
         obj[headers[j]] = currentline[j];
       }
+      this.ID_List.push(obj['BMS-ID'])
       result.push(obj);
     }
     let bcc_json = result;
@@ -161,7 +163,7 @@ export class TransportMapComponent implements OnInit {
   generatePointFeature(__row: any): any {
     let __lat = __row['Y'];
     let __lng = __row['X'];
-    let __desc = "Blah";
+    let __desc = '<p>ID: ' + __row['BMS-ID'] + '</p> <p>Lat: ' + __row['Y'] + '</p> <p>Lng: ' + __row['X'] + '</p>';
     if (__lat == undefined && __lng == undefined) return;
     let coordinates = [parseFloat(__lng), parseFloat(__lat)];
     if (coordinates[0] == null && coordinates[1] == null) return;

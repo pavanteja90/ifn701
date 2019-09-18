@@ -1,10 +1,26 @@
 <div class="container taxi-page">
     <div id="__content__">
-        <!-- <br>
+        <br>
         <h3>Filters</h3>
         <br>
         <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-4">
+                <mat-form-field>
+                    <mat-label>Select Origin</mat-label>
+                    <mat-select [(value)]="__selectedOrigin">
+                        <mat-option *ngFor="let item of ID_List" value="item">{{ item }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+            <div class="col-md-4">
+                <mat-form-field>
+                    <mat-label>Select Destination</mat-label>
+                    <mat-select [(value)]="__selectedDestination">
+                        <mat-option *ngFor="let item of ID_List" value="item">{{ item }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+            <div class="col-md-4">
                 <mat-form-field color="primary">
                     <mat-label>Choose Date</mat-label>
                     <input matInput (dateChange)="dateChanged($event.value)" [min]="__minDate" [max]="__maxDate"
@@ -13,7 +29,7 @@
                     <mat-datepicker color="primary" #datepicker></mat-datepicker>
                 </mat-form-field>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <mat-form-field color="primary">
                     <mat-label>Start Time</mat-label>
                     <input matInput name="starttimepicker" [ngxTimepicker]="starttimepicker" [format]="24"
@@ -21,7 +37,7 @@
                     <ngx-material-timepicker #starttimepicker></ngx-material-timepicker>
                 </mat-form-field>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <mat-form-field color="primary">
                     <mat-label>End Time</mat-label>
                     <input matInput name="endtimepicker" [ngxTimepicker]="endtimepicker" [format]="24"
@@ -29,36 +45,19 @@
                     <ngx-material-timepicker #endtimepicker></ngx-material-timepicker>
                 </mat-form-field>
             </div>
-            <div class="col-md-3">
-                <mat-form-field>
-                    <mat-label>Select a Taxi</mat-label>
-                    <mat-select [(value)]="__selectedTaxi">
-                        <mat-option value="fhv">FHV</mat-option>
-                        <mat-option value="green">Green</mat-option>
-                        <mat-option value="yellow">Yellow</mat-option>
-                    </mat-select>
-                </mat-form-field>
-            </div>
         </div>
         <div class="row">
             <div class="col-md-3">
                 <button mat-raised-button color="primary" (click)="submitForm()">Submit</button>
             </div>
-            <div class="col-md-3">
-
-            </div>
-            <div class="col-md-3">
-
-            </div>
-            <div class="col-md-3">
-
-            </div>
         </div>
-        <br> -->
+        <br>
         <br>
         <div class="row">
             <div id='map'></div>
         </div>
+        <br>
+        <br>
     </div>
 </div>
 
