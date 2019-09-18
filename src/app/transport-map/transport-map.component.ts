@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import * as mapboxgl from 'mapbox-gl';
 import { ReadCSVService } from '../services/read-csv.service';
+import { ReadGeojsonService } from '../services/read-geojson.service';
 
 @Component({
   selector: 'app-transport-map',
@@ -9,11 +10,21 @@ import { ReadCSVService } from '../services/read-csv.service';
 })
 export class TransportMapComponent implements OnInit {
 
+  //Variables
   public map: any;
   public CSV_TARGET_FILE: string = '../../assets/BCC_sensors.csv';
+  public NETWORK_TARGET_FILE: string = '../../assets/13_09_2019_latest.json';
   public ID_List: Array<any> = [];
+  //Variables from template
+  public __selectedOrigin: string = '';
+  public __selectedDestination: string = '';
+  public __minDate: string = '';
+  public __maxDate: string = '';
+  public __selectedDate: string = '';
+  public __startTime: string = '';
+  public __endTime: string = '';
 
-  constructor(public _readCSVService: ReadCSVService) { }
+  constructor(public _readCSVService: ReadCSVService, public _readGeojsonService: ReadGeojsonService) { }
 
   ngOnInit() {
     Object.getOwnPropertyDescriptor(mapboxgl, "accessToken").set('pk.eyJ1IjoicGF2YW50ZWphOTAiLCJhIjoiY2p6eXl6ZzhiMDV3cDNvcDd6Nmd3bWtmNyJ9.Q7ZMA251fPPlfRenu1V-Gg');
@@ -37,19 +48,6 @@ export class TransportMapComponent implements OnInit {
           .setHTML(description)
           .addTo(scope.map);
       });
-
-      // scope.map.on('click', 'boundary', function (e) {
-      //   var coordinates = e.features[0].geometry['coordinates'][0][0].slice();
-      //   var description = e.features[0].properties.description;
-      //   while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-      //     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-      //   }
-
-      //   new mapboxgl.Popup()
-      //     .setLngLat(coordinates)
-      //     .setHTML(description)
-      //     .addTo(scope.map);
-      // });
 
       scope.map.on('mouseenter', 'bcc_sensors', function () {
         scope.map.getCanvas().style.cursor = 'pointer';
@@ -115,23 +113,25 @@ export class TransportMapComponent implements OnInit {
     let __geoJSON = this.generatePointMap(bcc_json);
     setTimeout(() => {
       this.map.addLayer(__geoJSON);
-      this.map.addLayer({
-        'id': 'bne_roads',
-        'type': 'line',
-        'source': {
-          type: 'vector',
-          url: 'mapbox://pavanteja90.dgc5wxjs'
-        },
-        'source-layer': 'network_28_06_2019-6q1aq6',
-        "layout": {
-          "line-join": "round",
-          "line-cap": "round"
-        },
-        'paint': {
-          "line-color": "#ff69b4",
-          "line-width": 1
-        }
-      })
+      this.addNetwork();
+      // This is the base layer that is added to check whether we can add shapefile to the map 
+      // this.map.addLayer({
+      //   'id': 'bne_roads',
+      //   'type': 'line',
+      //   'source': {
+      //     type: 'vector',
+      //     url: 'mapbox://pavanteja90.dgc5wxjs'
+      //   },
+      //   'source-layer': 'network_28_06_2019-6q1aq6',
+      //   "layout": {
+      //     "line-join": "round",
+      //     "line-cap": "round"
+      //   },
+      //   'paint': {
+      //     "line-color": "#ff69b4",
+      //     "line-width": 1
+      //   }
+      // })
     }, 1000);
   }
 
@@ -181,4 +181,39 @@ export class TransportMapComponent implements OnInit {
     return __feature;
   }
 
+  addNetwork() {
+    this._readGeojsonService.readGeoJson(this.NETWORK_TARGET_FILE)
+      .subscribe(resp => {
+        this.addNetworkLayer(resp);
+      }, error => {
+        console.log(error);
+      })
+  }
+
+  addNetworkLayer(geojson: any) {
+    this.map.addLayer({
+      "id": "bcc_network",
+      "type": "line",
+      "source": {
+        "type": "geojson",
+        "data": geojson
+      },
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      'paint': {
+        "line-color": "#ff69b4",
+        "line-width": 1
+      }
+    });
+  }
+
+  dateChanged(value: string) {
+
+  }
+
+  submitForm() {
+
+  }
 }

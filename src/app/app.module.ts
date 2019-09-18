@@ -22,6 +22,7 @@ import { LoadingComponent } from './loading/loading.component';
 
 //Services
 import { ReadCSVService } from './services/read-csv.service';
+import { ReadGeojsonService } from './services/read-geojson.service';
 
 @NgModule({
   declarations: [
@@ -39,7 +40,7 @@ import { ReadCSVService } from './services/read-csv.service';
     ReqMatModule,
     NgxMaterialTimepickerModule
   ],
-  providers: [ReadCSVService],
+  providers: [ReadCSVService, ReadGeojsonService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
