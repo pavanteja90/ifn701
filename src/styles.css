@@ -5,3 +5,7 @@
 .centered {
     text-align: center !important;
 }
+
+.no-margin {
+    margin: 0 !important;
+}

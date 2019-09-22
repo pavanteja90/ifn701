@@ -1,5 +1,5 @@
-<div class="container taxi-page">
-    <div id="__content__">
+<div id='content' class="container taxi-page">
+    <div>
         <br>
         <h3>Filters</h3>
         <br>
@@ -8,7 +8,7 @@
                 <mat-form-field>
                     <mat-label>Select Origin</mat-label>
                     <mat-select [(value)]="__selectedOrigin">
-                        <mat-option *ngFor="let item of ID_List" value="item">{{ item }}</mat-option>
+                        <mat-option *ngFor="let item of Origin_ID_List" value="item">{{ item }}</mat-option>
                     </mat-select>
                 </mat-form-field>
             </div>
@@ -16,40 +16,120 @@
                 <mat-form-field>
                     <mat-label>Select Destination</mat-label>
                     <mat-select [(value)]="__selectedDestination">
-                        <mat-option *ngFor="let item of ID_List" value="item">{{ item }}</mat-option>
+                        <mat-option *ngFor="let item of Destination_ID_List" value="item">{{ item }}</mat-option>
                     </mat-select>
                 </mat-form-field>
             </div>
-            <div class="col-md-4">
-                <mat-form-field color="primary">
-                    <mat-label>Choose Date</mat-label>
-                    <input matInput (dateChange)="dateChanged($event.value)" [min]="__minDate" [max]="__maxDate"
-                        [value]="__selectedDate" [matDatepicker]="datepicker">
-                    <mat-datepicker-toggle matSuffix [for]="datepicker"></mat-datepicker-toggle>
-                    <mat-datepicker color="primary" #datepicker></mat-datepicker>
-                </mat-form-field>
-            </div>
-            <div class="col-md-4">
-                <mat-form-field color="primary">
-                    <mat-label>Start Time</mat-label>
-                    <input matInput name="starttimepicker" [ngxTimepicker]="starttimepicker" [format]="24"
-                        [(ngModel)]="__startTime">
-                    <ngx-material-timepicker #starttimepicker></ngx-material-timepicker>
-                </mat-form-field>
-            </div>
-            <div class="col-md-4">
-                <mat-form-field color="primary">
-                    <mat-label>End Time</mat-label>
-                    <input matInput name="endtimepicker" [ngxTimepicker]="endtimepicker" [format]="24"
-                        [min]="__startTime" [(ngModel)]="__endTime">
-                    <ngx-material-timepicker #endtimepicker></ngx-material-timepicker>
-                </mat-form-field>
-            </div>
         </div>
+        <br>
+
+        <mat-accordion>
+            <mat-expansion-panel>
+                <mat-expansion-panel-header>
+                    <mat-panel-title>
+                        <h6 class="no-margin">Select Days</h6>
+                    </mat-panel-title>
+                    <mat-panel-description>
+                        Select the number of days you want to filter data (Under Development)
+                    </mat-panel-description>
+                </mat-expansion-panel-header>
+
+                <mat-radio-group #daysFreq aria-label="Select Days" color='primary' (change)="radioChanged($event)">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <mat-radio-button value="1">Last Month</mat-radio-button>
+                        </div>
+                        <div class="col-md-4">
+                            <mat-radio-button value="2">Last Week</mat-radio-button>
+                        </div>
+                        <div class="col-md-4">
+                            <mat-radio-button value="3">Yesterday</mat-radio-button>
+                        </div>
+                    </div>
+                </mat-radio-group>
+
+            </mat-expansion-panel>
+            <mat-expansion-panel (opened)="panelOpenState = true" (closed)="panelOpenState = false">
+                <mat-expansion-panel-header>
+                    <mat-panel-title>
+                        <h6 class="no-margin">More Filters</h6>
+                    </mat-panel-title>
+                    <mat-panel-description>
+                        Additional filters for more precise results (Under Development)
+                    </mat-panel-description>
+                </mat-expansion-panel-header>
+
+                <div #extraFilters class="row">
+                    <div class="col-md-4">
+                        <mat-form-field color="primary">
+                            <mat-label>Choose Date</mat-label>
+                            <input matInput (dateChange)="dateChanged($event.value)" [min]="__minDate" [max]="__maxDate"
+                                [value]="__selectedDate" [matDatepicker]="datepicker">
+                            <mat-datepicker-toggle matSuffix [for]="datepicker"></mat-datepicker-toggle>
+                            <mat-datepicker color="primary" #datepicker></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-md-4">
+                        <mat-form-field color="primary">
+                            <mat-label>Start Time</mat-label>
+                            <input matInput name="starttimepicker" [ngxTimepicker]="starttimepicker" [format]="24"
+                                [(ngModel)]="__startTime">
+                            <ngx-material-timepicker #starttimepicker></ngx-material-timepicker>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-md-4">
+                        <mat-form-field color="primary">
+                            <mat-label>End Time</mat-label>
+                            <input matInput name="endtimepicker" [ngxTimepicker]="endtimepicker" [format]="24"
+                                [min]="__startTime" [(ngModel)]="__endTime">
+                            <ngx-material-timepicker #endtimepicker></ngx-material-timepicker>
+                        </mat-form-field>
+                    </div>
+                </div>
+
+            </mat-expansion-panel>
+        </mat-accordion>
+        <br>
         <div class="row">
             <div class="col-md-3">
                 <button mat-raised-button color="primary" (click)="submitForm()">Submit</button>
             </div>
+        </div>
+        <br>
+        <br>
+        <div id='menu'>
+            <label for="mapStyle">
+                <h5 class="no-margin">Select Map Style</h5>
+            </label>
+            <mat-radio-group #mapStyle aria-label="Select Map Style" color='primary' (change)="switchLayer($event)">
+                <div class="row">
+                    <div class="col-md-3">
+                        <mat-radio-button value="streets-v11">Streets</mat-radio-button>
+                    </div>
+                    <div class="col-md-3">
+                        <mat-radio-button value="light-v10">Light</mat-radio-button>
+                    </div>
+                    <div class="col-md-3">
+                        <mat-radio-button value="dark-v10" checked>Dark</mat-radio-button>
+                    </div>
+                    <div class="col-md-3">
+                        <mat-radio-button value="outdoors-v11">Outdoors</mat-radio-button>
+                    </div>
+                    <div class="col-md-3">
+                        <mat-radio-button value="satellite-v9">Satellite</mat-radio-button>
+                    </div>
+                </div>
+            </mat-radio-group>
+            <!-- <input id='streets-v11' type='radio' name='rtoggle' value='streets' checked='checked'>
+            <label for='streets'>streets</label>
+            <input id='light-v10' type='radio' name='rtoggle' value='light'>
+            <label for='light'>light</label>
+            <input id='dark-v10' type='radio' name='rtoggle' value='dark'>
+            <label for='dark'>dark</label>
+            <input id='outdoors-v11' type='radio' name='rtoggle' value='outdoors'>
+            <label for='outdoors'>outdoors</label>
+            <input id='satellite-v9' type='radio' name='rtoggle' value='satellite'>
+            <label for='satellite'>satellite</label> -->
         </div>
         <br>
         <br>
@@ -61,6 +141,6 @@
     </div>
 </div>
 
-<!-- <div class="loading-page">
+<div id="loading-page">
     <app-loading></app-loading>
-</div> -->
+</div>
