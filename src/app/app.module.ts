@@ -24,6 +24,8 @@ import { LoadingComponent } from './loading/loading.component';
 import { ReadCSVService } from './services/read-csv.service';
 import { ReadGeojsonService } from './services/read-geojson.service';
 
+import { HashLocationStrategy, LocationStrategy } from '@angular/common';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -40,7 +42,7 @@ import { ReadGeojsonService } from './services/read-geojson.service';
     ReqMatModule,
     NgxMaterialTimepickerModule
   ],
-  providers: [ReadCSVService, ReadGeojsonService],
+  providers: [ReadCSVService, ReadGeojsonService, {provide: LocationStrategy, useClass: HashLocationStrategy}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
