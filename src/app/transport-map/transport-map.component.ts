@@ -32,6 +32,7 @@ export class TransportMapComponent implements OnInit {
   public __endTime: string = '';
   public __bccjson: any; //List of BCC sensors across brisbane
   public __networkGeoJson: any; //Geojson of available network
+  public __featureList: Array<any> = []; //List of features
 
   constructor(public _readCSVService: ReadCSVService, public _readGeojsonService: ReadGeojsonService, public _snackBar: MatSnackBar) { }
 
@@ -45,7 +46,7 @@ export class TransportMapComponent implements OnInit {
     });
     let scope = this;
     this.map.on('load', function () {
-      scope.map.on('click', 'bcc_sensors', function (e) {
+      scope.map.on('click', 'bcc_sensors', function (e: any) {
         var coordinates = e.features[0].geometry['coordinates'].slice();
         var description = e.features[0].properties.description;
         while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
@@ -58,7 +59,7 @@ export class TransportMapComponent implements OnInit {
           .addTo(scope.map);
       });
 
-      scope.map.on('click', 'bcc_network', function (e) {
+      scope.map.on('click', 'bcc_network', function (e: any) {
         var length = Math.floor(parseInt(e.features[0].geometry['coordinates'].length) / 2);
         var coordinates = e.features[0].geometry['coordinates'][length].slice();
         var description = e.features[0].properties.Btlinkid;
@@ -129,7 +130,7 @@ export class TransportMapComponent implements OnInit {
       });
   }
 
-  setOriginDestination(resp) {
+  setOriginDestination(resp: any) {
     this.convertCSVtoJSON_Trajectory(resp)
   }
 
@@ -161,7 +162,7 @@ export class TransportMapComponent implements OnInit {
   }
 
   getCSV() {
-    let csv_file;
+    let csv_file: any;
     this._readCSVService.readCSV(this.CSV_TARGET_FILE)
       .subscribe(resp => {
         csv_file = resp
@@ -222,7 +223,7 @@ export class TransportMapComponent implements OnInit {
       }
     }
 
-    data.forEach(__e => {
+    data.forEach((__e: any) => {
       let __feature = this.generatePointFeature(__e)
       if (__feature) __respJSON.source.data.features.push(__feature);
     })
@@ -303,7 +304,7 @@ export class TransportMapComponent implements OnInit {
       return false;
   }
 
-  switchLayer(layer) {
+  switchLayer(layer: { value: any; }) {
     var layerId = layer.value;
     if (this.map.getLayer('bcc_sensors'))
       this.map.removeLayer('bcc_sensors');
@@ -326,8 +327,11 @@ export class TransportMapComponent implements OnInit {
       this.map.removeLayer('bcc_network');
     if (this.map.getSource('bcc_network'))
       this.map.removeSource('bcc_network');
+    console.log("This is GeoJSOn available for the current network");
     console.log(this.__networkGeoJson);
+    console.log("These are the trajectories available for the current network");
     console.log(this.trajectories);
+    console.log("These are the BCC points of the system");
     console.log(this.__bccjson);
     this.mapRequiredBTSensors();
   }
@@ -335,27 +339,82 @@ export class TransportMapComponent implements OnInit {
   mapRequiredBTSensors() {
     let requiredBTSensors = [];
     this.trajectories.forEach(item => {
-      item['Path'].forEach(el => {
+      item['Path'].forEach((el: any) => {
         if (requiredBTSensors.find(x => x == el) == undefined)
           requiredBTSensors.push(el);
       });
     });
     let requiredBccJson = [];
     requiredBTSensors.forEach(sensorID => {
-      requiredBccJson.push(this.__bccjson.find(x => parseInt(x['BMS-ID']) == sensorID))
+      requiredBccJson.push(this.__bccjson.find((x: any) => parseInt(x['BMS-ID']) == sensorID))
     })
     this.addBCCLayerToMap(requiredBccJson, false);
     this.buildNetwork();
   }
 
   buildNetwork() {
-    this.__networkGeoJson.features.forEach(item => {
+    this.__networkGeoJson.features.forEach((item: any) => {
       let BTLink = item.properties.path.split('/');
       BTLink = BTLink[BTLink.length - 1];
       BTLink = BTLink.split('.')[0].split('_');
       item.properties['origin'] = BTLink[0];
       item.properties['destination'] = BTLink[1];
     });
+    console.log("This is the modified network GeoJson with origin and destination in the properties");
+    console.log(this.__networkGeoJson);
+    this.getNetworks()
+  }
+
+  getNetworks() {
+    this.trajectories.forEach(trajectory => {
+      let path = trajectory.Path;
+      for (let i: number = 0; i < path.length - 1; ++i) {
+        let origin: number = path[i];
+        for (let j: number = i + 1; j < path.length; ++j) {
+          let destination: number = path[j];
+          let currentPath = this.getPath(origin, destination);
+          if (currentPath != undefined) {
+            let featureIndex = this.doesFeatureExist(currentPath)
+            if (featureIndex != -1) {
+              this.addWeight(trajectory, featureIndex)
+            }
+            else {
+              this.buildFeature(currentPath, trajectory);
+            }
+            i = j-1;
+            break;
+          }
+        }
+      }
+    });
+    console.log(this.__featureList);
+    let featureList = {
+      "type": "FeatureCollection",
+      "features": this.__featureList
+    }
+    this.addNetworkLayer(featureList);
+  }
+
+  getPath(origin: number, destination: number): any {
+    for (let i = 0; i < this.__networkGeoJson.features.length; ++i) {
+      if (parseInt(this.__networkGeoJson.features[i].properties.origin) == origin && parseInt(this.__networkGeoJson.features[i].properties.destination) == destination) {
+        return this.__networkGeoJson.features[i];
+      }
+    }
+    return undefined;
+  }
+
+  doesFeatureExist(feature: any) {
+    return this.__featureList.findIndex(x => x.properties.Btlinkid == feature.properties.Btlinkid);
+  }
+
+  buildFeature(feature: any, trajectory: any) {
+    feature.properties['weight'] = parseFloat(trajectory['Weight']);
+    this.__featureList.push(feature);
+  }
+
+  addWeight(trajectory: any, index: number) {
+    this.__featureList[index].properties['weight'] += parseFloat(trajectory['Weight']);
   }
 
   loading(isLoading: boolean) {
