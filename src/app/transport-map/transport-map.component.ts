@@ -62,7 +62,7 @@ export class TransportMapComponent implements OnInit {
       scope.map.on('click', 'bcc_network', function (e: any) {
         var length = Math.floor(parseInt(e.features[0].geometry['coordinates'].length) / 2);
         var coordinates = e.features[0].geometry['coordinates'][length].slice();
-        var description = e.features[0].properties.Btlinkid;
+        var description = scope.createDesc(e);
         while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
           coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
         }
@@ -90,29 +90,15 @@ export class TransportMapComponent implements OnInit {
       });
 
       scope.map.addControl(new mapboxgl.NavigationControl());
-
-      // scope.map.on("styleimagemissing", e => {
-      //   console.log("loading missing image: " + e.id);
-      //   if (
-      //     e.id === "circle-11" ||
-      //     e.id === "triangle-stroked-11" ||
-      //     e.id == "circle-stroked-11"
-      //   ) {
-      //     scope.map.loadImage(e.id + ".png", (error, image) => {
-      //       if (error) throw error;
-      //       if (!scope.map.hasImage(e.id)) scope.map.addImage(e.id, image);
-      //     });
-      //   }
-      // });
-      // scope.map.on('mouseenter', 'boundary', function () {
-      //   scope.map.getCanvas().style.cursor = 'pointer';
-      // });
-
-      // scope.map.on('mouseleave', 'boundary', function () {
-      //   scope.map.getCanvas().style.cursor = '';
-      // });
     });
     this.getTrajectory();
+  }
+
+  createDesc(e: any): string {
+    if(e.features[0].properties.weight) {
+      return '<p>Weight: ' + e.features[0].properties.weight + '<br>BTLink ID: ' + e.features[0].properties.Btlinkid + '</p>';
+    }
+    return '<p>BTLink ID: ' + e.features[0].properties.Btlinkid + '</p>';
   }
 
   getTrajectory() {
