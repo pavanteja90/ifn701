@@ -33,6 +33,13 @@ export class TransportMapComponent implements OnInit {
   public __bccjson: any; //List of BCC sensors across brisbane
   public __networkGeoJson: any; //Geojson of available network
   public __featureList: Array<any> = []; //List of features
+  public __colorCodes: any = {
+    "blue": '#A1C4FD',
+    "yellow": '#FFDD00',
+    "orange": '#F53803',
+    "red": '#FF0000'
+  }
+  public __highestWeight: number = 0;
 
   constructor(public _readCSVService: ReadCSVService, public _readGeojsonService: ReadGeojsonService, public _snackBar: MatSnackBar) { }
 
@@ -95,7 +102,7 @@ export class TransportMapComponent implements OnInit {
   }
 
   createDesc(e: any): string {
-    if(e.features[0].properties.weight) {
+    if (e.features[0].properties.weight) {
       return '<p>Weight: ' + e.features[0].properties.weight + '<br>BTLink ID: ' + e.features[0].properties.Btlinkid + '</p>';
     }
     return '<p>BTLink ID: ' + e.features[0].properties.Btlinkid + '</p>';
@@ -228,7 +235,7 @@ export class TransportMapComponent implements OnInit {
       "type": "Feature",
       "properties": {
         "description": __desc,
-        "icon": "car"
+        "icon": "dot",
       },
       "geometry": {
         "type": "Point",
@@ -261,9 +268,9 @@ export class TransportMapComponent implements OnInit {
         "line-join": "round",
         "line-cap": "round"
       },
-      'paint': {
-        "line-color": "#ff69b4",
-        "line-width": 3
+      "paint": {
+        "line-color": ['get', 'color'],
+        "line-width": 5
       }
     });
   }
@@ -367,17 +374,18 @@ export class TransportMapComponent implements OnInit {
             else {
               this.buildFeature(currentPath, trajectory);
             }
-            i = j-1;
+            i = j - 1;
             break;
           }
         }
       }
     });
-    console.log(this.__featureList);
+    this.addColorCode(this.__featureList);
     let featureList = {
       "type": "FeatureCollection",
       "features": this.__featureList
     }
+    console.log(this.__featureList);
     this.addNetworkLayer(featureList);
   }
 
@@ -401,6 +409,47 @@ export class TransportMapComponent implements OnInit {
 
   addWeight(trajectory: any, index: number) {
     this.__featureList[index].properties['weight'] += parseFloat(trajectory['Weight']);
+  }
+
+  addColorCode(features: Array<any>) {
+    let __highestWeight = Math.max.apply(Math, features.map((x: any) => { return x.properties['weight']; }));
+    features.forEach((feature: any) => {
+      let __weight = feature.properties['weight'];
+      if (0 >= __weight && __weight < (__highestWeight * 0.25)) {
+        feature.properties['color'] = this.__colorCodes['blue'];
+      }
+      else if (__weight >= (__highestWeight * 0.25) && __weight < (__highestWeight * 0.5)) {
+        feature.properties['color'] = this.__colorCodes['yellow'];
+      }
+      else if (__weight >= (__highestWeight * 0.5) && __weight < (__highestWeight * 0.75)) {
+        feature.properties['color'] = this.__colorCodes['orange'];
+      }
+      else if (__weight >= (__highestWeight * 0.75) && __weight <= (__highestWeight)) {
+        feature.properties['color'] = this.__colorCodes['red'];
+      }
+      else {
+        feature.properties['color'] = this.__colorCodes['blue'];
+      }
+    });
+    // this.addLegend();
+    this.__featureList = features;
+  }
+
+  addLegend() {
+    let legend = document.getElementById('legend');
+    for (let [__key, __value] of Object.entries(this.__colorCodes)) {
+      var color = __value;
+      var item = document.createElement('div');
+      var key = document.createElement('span');
+      key.className = 'legend-key';
+      key.style.backgroundColor = __key;
+
+      var value = document.createElement('span');
+      value.innerHTML = __key;
+      item.appendChild(key);
+      item.appendChild(value);
+      legend.appendChild(item);
+    }
   }
 
   loading(isLoading: boolean) {
