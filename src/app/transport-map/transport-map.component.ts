@@ -34,12 +34,14 @@ export class TransportMapComponent implements OnInit {
     public __networkGeoJson: any; //Geojson of available network
     public __featureList: Array<any> = []; //List of features
     public __colorCodes: any = [
-        '#A1C4FD',
-        '#FFDD00',
-        '#F53803',
-        '#FF0000'
+        '#A1C4FD', //Blue
+        '#FFDD00', //Yellow
+        '#F1974D', //Orange
+        '#FF0000' //Red
     ] //These are the color codes of lines on the map
     public __highestWeight: number = 0; //This variable holds the highest weight available on map
+    public __topVolumeRoutesList: Array<any> = []; //This variable holds the top volume routes available (If number of routes are more than 3, it defaults to 3)
+    public __availableRoutes: any = {};
 
     constructor(public _readCSVService: ReadCSVService, public _readGeojsonService: ReadGeojsonService, public _snackBar: MatSnackBar) { }
 
@@ -126,7 +128,7 @@ export class TransportMapComponent implements OnInit {
                 this.showSnackbar(error, 'Close');
             });
     }
-
+    //Convert the csv from the trajectories (available trips) to json file
     convertCSVtoJSON_Trajectory(_csvFile: any) {
         let lines = _csvFile.split("\n").map((item: any) => { return item.trim() });
         let tempLines = []
@@ -165,7 +167,7 @@ export class TransportMapComponent implements OnInit {
                 this.convertCSVtoJSON_BMS(csv_file);
                 setTimeout(() => {
                     this.loading(false);
-                }, 1000);
+                }, 2000);
             }, error => {
                 console.log(error);
                 this.showSnackbar(error, 'Close');
@@ -190,22 +192,22 @@ export class TransportMapComponent implements OnInit {
         }
         let bcc_json = result;
         this.__bccjson = bcc_json;
-        this.addBCCLayerToMap(bcc_json);
+        this.addBMSLayerToMap(bcc_json);
     }
-
-    addBCCLayerToMap(bcc_json: any, addNetwork: boolean = true) {
+    //Adding the BMS sensors layer to map
+    addBMSLayerToMap(bcc_json: any, addNetwork: boolean = true) {
         let __geoJSON = this.generatePointMap(bcc_json);
+        if (addNetwork)
+            this.addNetwork();
         setTimeout(() => {
             this.map.addLayer(__geoJSON);
-            if (addNetwork)
-                this.addNetwork();
-        }, 1000);
+        }, 2000);
     }
-
+    //Generating the BMS sensor points layer on the map
     generatePointMap(data: any) {
         let __respJSON = {
             "id": "bcc_sensors",
-            "type": "symbol",
+            "type": "circle",
             "source": {
                 "type": "geojson",
                 "data": {
@@ -213,9 +215,9 @@ export class TransportMapComponent implements OnInit {
                     "features": []
                 }
             },
-            "layout": {
-                "icon-image": "{icon}-11",
-                "icon-allow-overlap": true
+            "paint": {
+                "circle-radius": ['get', 'radius'],
+                "circle-color": ['get', 'color']
             }
         }
 
@@ -226,7 +228,7 @@ export class TransportMapComponent implements OnInit {
 
         return __respJSON;
     }
-
+    //Generating the BMS sensor point features on the map
     generatePointFeature(__row: any): any {
         let __lat = __row['Y'];
         let __lng = __row['X'];
@@ -237,29 +239,40 @@ export class TransportMapComponent implements OnInit {
         let __feature = {
             "type": "Feature",
             "properties": {
-                "description": __desc,
-                "icon": "dot",
+                "description": __desc
             },
             "geometry": {
                 "type": "Point",
                 "coordinates": [coordinates[0], coordinates[1]]
             }
         }
+        if (parseInt(__row['BMS-ID']) == parseInt(this.__selectedOrigin)) {
+            __feature.properties['color'] = '#4169e1'; //Origin BT Sensor color
+            __feature.properties['radius'] = 5;
+        }
+        else if (parseInt(__row['BMS-ID']) == parseInt(this.__selectedDestination)) {
+            __feature.properties['color'] = '#136207'; //Destination BT Sensor color
+            __feature.properties['radius'] = 5;
+        }
+        else {
+            __feature.properties['color'] = '#999999'; //Normal BT sensor color
+            __feature.properties['radius'] = 3;
+        }
         return __feature;
     }
-
+    //Adding the city trajectory network to the map
     addNetwork() {
         this._readGeojsonService.readGeoJson(this.NETWORK_TARGET_FILE)
             .subscribe(resp => {
-                this.addNetworkLayer(resp);
+                this.generateNetworkLayer(resp);
                 this.__networkGeoJson = resp;
             }, error => {
                 console.log(error);
                 this.showSnackbar(error, 'Close');
             })
     }
-
-    addNetworkLayer(geojson: any) {
+    //Generating the city network layer
+    generateNetworkLayer(geojson: any) {
         this.map.addLayer({
             "id": "bcc_network",
             "type": "line",
@@ -273,33 +286,33 @@ export class TransportMapComponent implements OnInit {
             },
             "paint": {
                 "line-color": ['get', 'color'],
-                "line-width": 5
+                "line-width": 3
             }
         });
     }
-
+    //Handling the date filter change event
     dateChanged(value: string) {
 
     }
-
+    //Handing the frequency filter radio button change
     radioChanged(event: any) {
         // console.log(event);
     }
-
+    //When submit button is clicked
     submitForm() {
         if (this.checkFilters())
             this.renderMap();
         else
             this.showSnackbar('Please select origin and destination', 'Close');
     }
-
+    //Checking whether the mandatory filters are provided
     checkFilters(): boolean {
         if (this.__selectedOrigin && this.__selectedDestination)
             return true;
         else
             return false;
     }
-
+    //Switch the layer designs when the user changes the radio button options
     switchLayer(layer: { value: any; }) {
         var layerId = layer.value;
         if (this.map.getLayer('bcc_sensors'))
@@ -313,7 +326,43 @@ export class TransportMapComponent implements OnInit {
         this.map.setStyle('mapbox://styles/mapbox/' + layerId);
         this.getTrajectory();
     }
-
+    //Switch the top routes on the map when the user changes the radio button options
+    switchRoute(routeIndex: any) {
+        if (routeIndex == "-1") {
+            this.renderMap();
+        }
+        else {
+            if (this.map.getLayer('bcc_network'))
+                this.map.removeLayer('bcc_network');
+            if (this.map.getSource('bcc_network'))
+                this.map.removeSource('bcc_network');
+            console.log("Path to show:");
+            console.log(this.__topVolumeRoutesList[routeIndex]);
+            let Path = JSON.parse("[" + this.__topVolumeRoutesList[routeIndex] + "]");
+            let trajectory = [{
+                "origin": Path[0],
+                "destination": Path[Path.length - 1],
+                "Weight": this.__availableRoutes[this.__topVolumeRoutesList[routeIndex]],
+                "Path": Path
+            }];
+            this.__featureList = [];
+            this.addFilteredNetwork(trajectory);
+        }
+    }
+    //Generates the top volume routes
+    generateTopRoutes() {
+        this.trajectories.forEach(trajectory => {
+            if (this.__availableRoutes[trajectory.Path]) {
+                this.__availableRoutes[trajectory.Path] += parseFloat(trajectory.Weight);
+            }
+            else {
+                this.__availableRoutes[trajectory.Path] = parseFloat(trajectory.Weight);
+            }
+        });
+        let __sortedKeys = Object.keys(this.__availableRoutes).sort((a, b) => { return this.__availableRoutes[b] - this.__availableRoutes[a] });
+        this.__topVolumeRoutesList = __sortedKeys.slice(0, 3);
+    }
+    //Rendering the map on the UI on click on submit button
     renderMap() {
         if (this.map.getLayer('bcc_sensors'))
             this.map.removeLayer('bcc_sensors');
@@ -323,15 +372,9 @@ export class TransportMapComponent implements OnInit {
             this.map.removeLayer('bcc_network');
         if (this.map.getSource('bcc_network'))
             this.map.removeSource('bcc_network');
-        // console.log("This is GeoJSOn available for the current network");
-        // console.log(this.__networkGeoJson);
-        // console.log("These are the trajectories available for the current network");
-        // console.log(this.trajectories);
-        // console.log("These are the BCC points of the system");
-        // console.log(this.__bccjson);
         this.mapRequiredBTSensors();
     }
-
+    //Mapping only the required BMS sensors on the map on user selection
     mapRequiredBTSensors() {
         let requiredBTSensors = [];
         this.trajectories.forEach(item => {
@@ -344,10 +387,10 @@ export class TransportMapComponent implements OnInit {
         requiredBTSensors.forEach(sensorID => {
             requiredBccJson.push(this.__bccjson.find((x: any) => parseInt(x['BMS-ID']) == sensorID))
         })
-        this.addBCCLayerToMap(requiredBccJson, false);
+        this.addBMSLayerToMap(requiredBccJson, false);
         this.buildNetwork();
     }
-
+    //Building the trajectory network after filtering
     buildNetwork() {
         this.__networkGeoJson.features.forEach((item: any) => {
             let BTLink = item.properties.path.split('/');
@@ -356,13 +399,11 @@ export class TransportMapComponent implements OnInit {
             item.properties['origin'] = BTLink[0];
             item.properties['destination'] = BTLink[1];
         });
-        // console.log("This is the modified network GeoJson with origin and destination in the properties");
-        // console.log(this.__networkGeoJson);
-        this.getNetworks()
+        this.addFilteredNetwork()
     }
-
-    getNetworks() {
-        this.trajectories.forEach(trajectory => {
+    //Adding the filtered network to the map
+    addFilteredNetwork(trajectory: Array<any> = this.trajectories) {
+        trajectory.forEach(trajectory => {
             let path = trajectory.Path;
             for (let i: number = 0; i < path.length - 1; ++i) {
                 let origin: number = path[i];
@@ -388,8 +429,8 @@ export class TransportMapComponent implements OnInit {
             "type": "FeatureCollection",
             "features": this.__featureList
         }
-        // console.log(this.__featureList);
-        this.addNetworkLayer(featureList);
+        this.generateNetworkLayer(featureList);
+        this.generateTopRoutes();
     }
     //Gets the path from the network json for the provided origin and destination BCC sensors
     getPath(origin: number, destination: number): any {
@@ -435,26 +476,7 @@ export class TransportMapComponent implements OnInit {
                 feature.properties['color'] = this.__colorCodes[0];
             }
         });
-        // this.addLegend();
         this.__featureList = features;
-    }
-    //Add legend to the page to identify the meaning of various color patterns
-    addLegend() {
-        let legend = document.getElementById('legend');
-        this.__colorCodes.forEach(__value => {
-            var color = __value;
-            var item = document.createElement('div');
-            item.className = 'legend-item'
-            var key = document.createElement('span');
-            key.className = 'legend-key';
-            key.style.backgroundColor = color;
-
-            var value = document.createElement('span');
-            value.innerHTML = __value;
-            item.appendChild(key);
-            item.appendChild(value);
-            legend.appendChild(item);
-        });
     }
     //Show or hide the loading page
     loading(isLoading: boolean) {
@@ -467,7 +489,7 @@ export class TransportMapComponent implements OnInit {
             $('#content').show();
         }
     }
-    //Show thw snackbar in the bottom with message and action
+    //Show the snackbar in the bottom with message and action
     showSnackbar(message: string, action: string) {
         this._snackBar.open(message, action, {
             duration: 3000

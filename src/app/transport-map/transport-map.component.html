@@ -7,16 +7,16 @@
             <div class="col-md-4">
                 <mat-form-field>
                     <mat-label>Select Origin</mat-label>
-                    <mat-select [(value)]="__selectedOrigin">
-                        <mat-option *ngFor="let item of Origin_ID_List" value="item">{{ item }}</mat-option>
+                    <mat-select [(value)]="__selectedOrigin" required>
+                        <mat-option *ngFor="let item of Origin_ID_List" [value]="item">{{ item }}</mat-option>
                     </mat-select>
                 </mat-form-field>
             </div>
             <div class="col-md-4">
                 <mat-form-field>
                     <mat-label>Select Destination</mat-label>
-                    <mat-select [(value)]="__selectedDestination">
-                        <mat-option *ngFor="let item of Destination_ID_List" value="item">{{ item }}</mat-option>
+                    <mat-select [(value)]="__selectedDestination" required>
+                        <mat-option *ngFor="let item of Destination_ID_List" [value]="item">{{ item }}</mat-option>
                     </mat-select>
                 </mat-form-field>
             </div>
@@ -126,9 +126,53 @@
         <div class="row">
             <div id='map'></div>
         </div>
-        <!-- <div class="row">
-            <div class='map-overlay' id='legend'></div>
-        </div> -->
+        <br>
+        <div [style.display]="__highestWeight>0 ? 'block' : 'none'">
+            <div class="row">
+                <h6>Legend (Volume):</h6>
+            </div>
+            <div class="row" id="legend">
+                <div class="col-md-3 legend-item">
+                    <div style="background-color: #A1C4FD;">0(excl) - {{0.25*__highestWeight}}(excl)
+                    </div>
+                </div>
+                <div class="col-md-3 legend-item">
+                    <div style="background-color: #FFDD00;">{{0.25*__highestWeight}}(incl) -
+                        {{0.5*__highestWeight}}(excl)
+                    </div>
+                </div>
+                <div class="col-md-3 legend-item">
+                    <div style="background-color: #f1974d;">{{0.5*__highestWeight}}(incl) -
+                        {{0.75*__highestWeight}}(excl)
+                    </div>
+                </div>
+                <div class="col-md-3 legend-item">
+                    <div style="background-color: #FF0000;">{{0.75*__highestWeight}}(incl) - {{__highestWeight}}(incl)
+                    </div>
+                </div>
+                <div class='legend' id='legend'></div>
+            </div>
+            <div class="row">
+                <p style="font-size: 0.75em;"><span style="color: #FF0000;">*&nbsp;</span><span style="color: #aaaaaa;">(incl) - including, (excl) - excluding</span></p>
+            </div>
+        </div>
+        <br>
+        <!-- [style.display]="__topVolumeRoutesList.length>0 ? 'block' : 'none'" -->
+        <div id="topVolumeRoutes">
+            <label for="topRoutes">
+                <h5 class="no-margin">Select Route</h5>
+            </label>
+            <mat-radio-group #topRoutes aria-label="Select Route" color='primary' (change)="switchRoute($event.value)">
+                <div class="row">
+                    <div class="col-md-3">
+                        <mat-radio-button value="-1" checked>All Routes</mat-radio-button>
+                    </div>
+                    <div class="col-md-3" *ngFor='let item of __topVolumeRoutesList; let i=index'>
+                        <mat-radio-button [value]="i">Top Route - {{i+1}}</mat-radio-button>
+                    </div>
+                </div>
+            </mat-radio-group>
+        </div>
         <br>
         <br>
     </div>
