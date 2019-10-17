@@ -109,7 +109,7 @@ export class TransportMapComponent implements OnInit {
     //Create a description to the link in a map (Weights if available)
     createDesc(e: any): string {
         if (e.features[0].properties.weight) {
-            return '<p>Weight: ' + e.features[0].properties.weight + '<br>BTLink ID: ' + e.features[0].properties.Btlinkid + '</p>';
+            return '<p>Volume: ' + e.features[0].properties.weight + '<br>BTLink ID: ' + e.features[0].properties.Btlinkid + '</p>';
         }
         return '<p>BTLink ID: ' + e.features[0].properties.Btlinkid + '</p>';
     }
@@ -201,7 +201,7 @@ export class TransportMapComponent implements OnInit {
             this.addNetwork();
         setTimeout(() => {
             this.map.addLayer(__geoJSON);
-        }, 2000);
+        }, 200);
     }
     //Generating the BMS sensor points layer on the map
     generatePointMap(data: any) {
@@ -328,6 +328,7 @@ export class TransportMapComponent implements OnInit {
     }
     //Switch the top routes on the map when the user changes the radio button options
     switchRoute(routeIndex: any) {
+        this.__featureList = []; //Clearing the features
         if (routeIndex == "-1") {
             this.renderMap();
         }
@@ -336,8 +337,6 @@ export class TransportMapComponent implements OnInit {
                 this.map.removeLayer('bcc_network');
             if (this.map.getSource('bcc_network'))
                 this.map.removeSource('bcc_network');
-            console.log("Path to show:");
-            console.log(this.__topVolumeRoutesList[routeIndex]);
             let Path = JSON.parse("[" + this.__topVolumeRoutesList[routeIndex] + "]");
             let trajectory = [{
                 "origin": Path[0],
@@ -345,12 +344,12 @@ export class TransportMapComponent implements OnInit {
                 "Weight": this.__availableRoutes[this.__topVolumeRoutesList[routeIndex]],
                 "Path": Path
             }];
-            this.__featureList = [];
             this.addFilteredNetwork(trajectory);
         }
     }
     //Generates the top volume routes
-    generateTopRoutes() {
+    generateTopRoutes() {        
+        this.__availableRoutes = {}; //Clearing the available routes
         this.trajectories.forEach(trajectory => {
             if (this.__availableRoutes[trajectory.Path]) {
                 this.__availableRoutes[trajectory.Path] += parseFloat(trajectory.Weight);
