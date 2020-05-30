@@ -25,6 +25,7 @@ import { ReadCSVService } from './services/read-csv.service';
 import { ReadGeojsonService } from './services/read-geojson.service';
 
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatIconModule } from '@angular/material';
 
 @NgModule({
   declarations: [
@@ -38,11 +39,12 @@ import { HashLocationStrategy, LocationStrategy } from '@angular/common';
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule,
+    MatIconModule,
     BrowserAnimationsModule,
     ReqMatModule,
     NgxMaterialTimepickerModule
   ],
-  providers: [ReadCSVService, ReadGeojsonService, {provide: LocationStrategy, useClass: HashLocationStrategy}],
+  providers: [ReadCSVService, ReadGeojsonService, { provide: LocationStrategy, useClass: HashLocationStrategy }, { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } }],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -4,7 +4,7 @@
         <h3>Filters</h3>
         <br>
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <mat-form-field>
                     <mat-label>Select Origin</mat-label>
                     <mat-select [(value)]="__selectedOrigin" required>
@@ -12,7 +12,7 @@
                     </mat-select>
                 </mat-form-field>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <mat-form-field>
                     <mat-label>Select Destination</mat-label>
                     <mat-select [(value)]="__selectedDestination" required>
@@ -21,9 +21,9 @@
                 </mat-form-field>
             </div>
         </div>
-        <br>
+        <!-- <br> -->
 
-        <mat-accordion>
+        <!-- <mat-accordion>
             <mat-expansion-panel>
                 <mat-expansion-panel-header>
                     <mat-panel-title>
@@ -88,11 +88,17 @@
                 </div>
 
             </mat-expansion-panel>
-        </mat-accordion>
-        <br>
+        </mat-accordion> -->
+        <!-- <br> -->
         <div class="row">
-            <div class="col-md-3">
-                <button mat-raised-button color="primary" (click)="submitForm()">Submit</button>
+            <div class="col-md-12">
+                <button mat-flat-button color="primary" (click)="submitForm()">Submit</button>
+                <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <button mat-flat-button style="background-color: #ccc;" (click)="clearFilters()">Clear</button>
+                <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <button mat-icon-button aria-label="Restore the map" (click)="reload()">
+                    <mat-icon>restore</mat-icon>
+                </button>
             </div>
         </div>
         <br>
@@ -158,7 +164,7 @@
         </div>
         <br>
         <!-- [style.display]="__topVolumeRoutesList.length>0 ? 'block' : 'none'" -->
-        <div id="topVolumeRoutes">
+        <div id="topVolumeRoutes" [style.display]="__topVolumeRoutesList.length>0 ? 'block' : 'none'">
             <label for="topRoutes">
                 <h5 class="no-margin">Select Route</h5>
             </label>

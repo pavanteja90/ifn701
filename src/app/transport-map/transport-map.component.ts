@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import * as mapboxgl from 'mapbox-gl';
 import { ReadCSVService } from '../services/read-csv.service';
 import { ReadGeojsonService } from '../services/read-geojson.service';
@@ -11,7 +11,7 @@ declare var $: any;
     templateUrl: './transport-map.component.html',
     styleUrls: ['./transport-map.component.css']
 })
-export class TransportMapComponent implements OnInit {
+export class TransportMapComponent implements OnInit, OnDestroy {
 
     //Variables
     public map: any; //This holds the mapboxgl's map object
@@ -42,6 +42,7 @@ export class TransportMapComponent implements OnInit {
     public __highestWeight: number = 0; //This variable holds the highest weight available on map
     public __topVolumeRoutesList: Array<any> = []; //This variable holds the top volume routes available (If number of routes are more than 3, it defaults to 3)
     public __availableRoutes: any = {};
+    public __subs = [];
 
     constructor(public _readCSVService: ReadCSVService, public _readGeojsonService: ReadGeojsonService, public _snackBar: MatSnackBar) { }
 
@@ -116,17 +117,18 @@ export class TransportMapComponent implements OnInit {
     //Call to the service to get the list of trips
     getTrajectory() {
         this.loading(true);
-        this._readCSVService.readCSV(this.TRAJECTORY_FILE)
-            .subscribe(resp => {
-                this.convertCSVtoJSON_Trajectory(resp);
-                this.getCSV();
-            }, error => {
-                console.log(error);
-                setTimeout(() => {
-                    this.loading(false);
-                }, 1000);;
-                this.showSnackbar(error, 'Close');
-            });
+        this.__subs.push(
+            this._readCSVService.readCSV(this.TRAJECTORY_FILE)
+                .subscribe(resp => {
+                    this.convertCSVtoJSON_Trajectory(resp);
+                    this.getCSV();
+                }, error => {
+                    console.log(error);
+                    setTimeout(() => {
+                        this.loading(false);
+                    }, 1000);;
+                    this.showSnackbar(error, 'Close');
+                }));
     }
     //Convert the csv from the trajectories (available trips) to json file
     convertCSVtoJSON_Trajectory(_csvFile: any) {
@@ -161,20 +163,21 @@ export class TransportMapComponent implements OnInit {
     //Call to the service to get the list of BCC sensors
     getCSV() {
         let csv_file: any;
-        this._readCSVService.readCSV(this.CSV_TARGET_FILE)
-            .subscribe(resp => {
-                csv_file = resp
-                this.convertCSVtoJSON_BMS(csv_file);
-                setTimeout(() => {
-                    this.loading(false);
-                }, 2000);
-            }, error => {
-                console.log(error);
-                this.showSnackbar(error, 'Close');
-                setTimeout(() => {
-                    this.loading(false);
-                }, 1000);;
-            });
+        this.__subs.push(
+            this._readCSVService.readCSV(this.CSV_TARGET_FILE)
+                .subscribe(resp => {
+                    csv_file = resp
+                    this.convertCSVtoJSON_BMS(csv_file);
+                    setTimeout(() => {
+                        this.loading(false);
+                    }, 2000);
+                }, error => {
+                    console.log(error);
+                    this.showSnackbar(error, 'Close');
+                    setTimeout(() => {
+                        this.loading(false);
+                    }, 1000);;
+                }));
     }
     //Convert the csv from BCC sensors to json file
     convertCSVtoJSON_BMS(_csvFile: any) {
@@ -262,14 +265,15 @@ export class TransportMapComponent implements OnInit {
     }
     //Adding the city trajectory network to the map
     addNetwork() {
-        this._readGeojsonService.readGeoJson(this.NETWORK_TARGET_FILE)
-            .subscribe(resp => {
-                this.generateNetworkLayer(resp);
-                this.__networkGeoJson = resp;
-            }, error => {
-                console.log(error);
-                this.showSnackbar(error, 'Close');
-            })
+        this.__subs.push(
+            this._readGeojsonService.readGeoJson(this.NETWORK_TARGET_FILE)
+                .subscribe(resp => {
+                    this.generateNetworkLayer(resp);
+                    this.__networkGeoJson = resp;
+                }, error => {
+                    console.log(error);
+                    this.showSnackbar(error, 'Close');
+                }));
     }
     //Generating the city network layer
     generateNetworkLayer(geojson: any) {
@@ -348,7 +352,7 @@ export class TransportMapComponent implements OnInit {
         }
     }
     //Generates the top volume routes
-    generateTopRoutes() {        
+    generateTopRoutes() {
         this.__availableRoutes = {}; //Clearing the available routes
         this.trajectories.forEach(trajectory => {
             if (this.__availableRoutes[trajectory.Path]) {
@@ -493,6 +497,29 @@ export class TransportMapComponent implements OnInit {
         this._snackBar.open(message, action, {
             duration: 3000
         })
+    }
+
+    clearFilters() {
+        this.__selectedOrigin = undefined;
+        this.__selectedDestination = undefined;
+        // this.__topVolumeRoutesList = [];
+        // this.trajectories = [];
+        // this.__highestWeight = 0;
+        // this.__availableRoutes = {};
+    }
+
+    reload() {
+        location.reload();
+    }
+
+    ngOnDestroy() {
+        if (this.__subs && this.__subs.length > 0) {
+            this.__subs.forEach(sub => {
+                if (sub) {
+                    sub.unsubscribe();
+                }
+            });
+        }
     }
 
 }
